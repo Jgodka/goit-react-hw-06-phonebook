@@ -1,6 +1,9 @@
 import { Formik, Field } from 'formik';
 import * as Yup from 'yup';
-import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
+import { getContacts } from 'redux/selectors';
+import { nanoid } from 'nanoid';
+import { addContact } from 'redux/contactsSlice';
 import {
   AddButton,
   StyledForm,
@@ -19,7 +22,24 @@ const quizSchema = Yup.object().shape({
     .required('Required'),
 });
 
-export const ContactForm = ({ onSubmit }) => {
+export const ContactForm = () => {
+  const dispatch = useDispatch(); 
+  const contacts = useSelector(getContacts); 
+
+  const handleSubmit = (values, actions) => {
+    const newContact = {
+      id: 'id-' + nanoid(),
+      name: values.name,
+      number: values.number,
+    };
+
+    if (contacts.find(contact => contact.name === newContact.name)) {
+      return alert(`${newContact.name} is already in contacts`);
+    }
+
+    dispatch(addContact(newContact));
+    actions.resetForm();
+  };
   return (
     <Formik
       initialValues={{
@@ -27,10 +47,7 @@ export const ContactForm = ({ onSubmit }) => {
         number: '',
       }}
       validationSchema={quizSchema}
-      onSubmit={(values, actions) => {
-        onSubmit(values);
-        actions.resetForm();
-      }}
+      onSubmit={handleSubmit}
     >
       <StyledForm>
         <StyledLabel>
@@ -48,8 +65,4 @@ export const ContactForm = ({ onSubmit }) => {
       </StyledForm>
     </Formik>
   );
-};
-
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
 };
